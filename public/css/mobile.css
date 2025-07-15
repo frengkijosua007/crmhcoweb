@@ -1,0 +1,159 @@
+/* Mobile Specific Styles */
+.mobile-body {
+    padding-top: 60px;
+    padding-bottom: 70px;
+    background-color: #f5f5f5;
+}
+
+.mobile-header {
+    height: 60px;
+    z-index: 1030;
+}
+
+.mobile-main {
+    min-height: calc(100vh - 130px);
+}
+
+.mobile-bottom-nav {
+    height: 60px;
+    z-index: 1030;
+}
+
+.mobile-bottom-nav .nav-link {
+    color: #6c757d;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    position: relative;
+}
+
+.mobile-bottom-nav .nav-link i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.mobile-bottom-nav .nav-link span {
+    font-size: 11px;
+}
+
+.mobile-bottom-nav .nav-link.active {
+    color: var(--primary-color);
+}
+
+.mobile-bottom-nav .badge {
+    position: absolute;
+    top: 5px;
+    right: 30%;
+    font-size: 9px;
+    padding: 2px 5px;
+}
+
+/* Mobile Cards */
+.mobile-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Mobile Form Elements */
+.mobile-form .form-control,
+.mobile-form .form-select {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px 16px;
+    border-radius: 8px;
+}
+
+.mobile-form .form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* Photo Upload Mobile */
+.photo-capture-btn {
+    width: 100%;
+    height: 200px;
+    border: 2px dashed var(--primary-color);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(26, 115, 232, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.photo-capture-btn:active {
+    transform: scale(0.98);
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.photo-grid img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Offline Banner */
+.offline-banner {
+    background-color: #ffc107;
+    color: #000;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    z-index: 1020;
+}
+
+/* Loading States */
+.mobile-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Mobile Specific Utilities */
+@media (max-width: 576px) {
+    .hide-mobile {
+        display: none !important;
+    }
+    
+    .container-fluid {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+    
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    .modal-content {
+        height: 100%;
+        border-radius: 0;
+    }
+}

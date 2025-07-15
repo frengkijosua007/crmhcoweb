@@ -1,0 +1,725 @@
+# Software Requirements Document (SRD)
+## CRM PT Hansen Karya Mandiri (Hansen Construction)
+
+*Versi:* 2.0  
+*Tanggal:* Juni 2025  
+*Status:* Final Draft
+
+---
+
+## 1. PENDAHULUAN
+
+### 1.1 Tujuan Dokumen
+Dokumen ini menjelaskan spesifikasi kebutuhan perangkat lunak untuk sistem Customer Relationship Management (CRM) PT Hansen Karya Mandiri yang akan dibangun menggunakan Laravel, PHP, dan MySQL dengan fokus pada manajemen survey lapangan dan pipeline proyek.
+
+### 1.2 Ruang Lingkup
+Sistem CRM ini akan mencakup:
+- Database klien dan proyek terintegrasi
+- Manajemen survey dan tugas lapangan dengan akses mobile
+- Pipeline proyek (Sales Funnel)
+- Kontrol akses berbasis role
+- Manajemen dokumen
+- Sistem notifikasi dan reminder
+- Dashboard ringkas untuk pimpinan
+
+### 1.3 Definisi dan Singkatan
+- *CRM*: Customer Relationship Management
+- *PIC*: Person in Charge
+- *GPS*: Global Positioning System
+- *2FA*: Two-Factor Authentication
+- *API*: Application Programming Interface
+- *CS*: Customer Service
+
+---
+
+## 2. DESKRIPSI UMUM SISTEM
+
+### 2.1 Perspektif Produk
+CRM Hansen Construction adalah sistem berbasis web dengan akses mobile yang dirancang untuk mengelola pipeline proyek konstruksi dari tahap lead hingga selesai, dengan fitur khusus untuk survey lapangan real-time.
+
+### 2.2 Fungsi Utama Produk
+1. *Database Klien & Proyek*: Manajemen data klien dan proyek terintegrasi
+2. *Manajemen Survey & Tugas Lapangan*: Input data survey dari mobile
+3. *Pipeline Proyek*: Tracking status dari lead hingga selesai
+4. *Kontrol Akses User*: Role-based access control
+5. *Upload & Dokumen*: Manajemen dokumen proyek
+6. *Notifikasi & Reminder*: Sistem pengingat otomatis
+7. *Dashboard Pimpinan*: Ringkasan performa bisnis
+
+### 2.3 Karakteristik Pengguna
+1. *Admin*: Akses penuh ke seluruh sistem
+2. *Manager*: Akses laporan dan ringkasan
+3. *Marketing/CS*: Akses data klien dan status proyek
+4. *Surveyor*: Input survey dan lihat tugas
+
+### 2.4 Batasan Sistem
+- Sistem berbasis web responsive untuk desktop dan mobile
+- Fitur offline untuk form survey (dengan sinkronisasi)
+- Upload foto maksimal 10MB per file
+- GPS location tracking untuk surveyor
+
+---
+
+## 3. KEBUTUHAN FUNGSIONAL
+
+### 3.1 Database Klien & Proyek
+
+#### 3.1.1 Informasi Klien
+- *ID*: FR-DB-001
+- *Deskripsi*: Menyimpan dan mengelola data klien
+- *Fields*:
+  - Nama Klien
+  - Kontak (Telp, Email, WhatsApp)
+  - Alamat lengkap
+  - Status (Prospek/Aktif/Selesai)
+  - PIC (Person in Charge)
+  - Tanggal registrasi
+  - Sumber lead (Referral/Website/Walk-in/dll)
+
+#### 3.1.2 Informasi Proyek
+- *ID*: FR-DB-002
+- *Deskripsi*: Menyimpan data proyek konstruksi
+- *Fields*:
+  - Kode Proyek (Auto-generated)
+  - Nama Proyek
+  - Jenis Proyek (Kantor/Showroom/Kafe/Restoran/Outlet)
+  - Lokasi Proyek
+  - Tanggal Mulai
+  - Tanggal Selesai (Target)
+  - Status Proyek
+  - Nilai Proyek
+  - Klien ID (Relasi)
+
+#### 3.1.3 Relasi Klien-Proyek
+- *ID*: FR-DB-003
+- *Deskripsi*: Satu klien dapat memiliki beberapa proyek
+- *Features*:
+  - History proyek per klien
+  - Total nilai proyek per klien
+  - Status aktif proyek per klien
+
+### 3.2 Manajemen Survey & Tugas Lapangan
+
+#### 3.2.1 Input Data Survey Mobile
+- *ID*: FR-SRV-001
+- *Deskripsi*: Surveyor input data dari mobile/HP
+- *Features*:
+  - Upload foto lokasi (multiple photos)
+  - Catatan/kondisi lapangan (text area)
+  - Status survey (Pending/In Progress/Done)
+  - Tanggal & waktu otomatis
+  - GPS location capture otomatis
+  - Offline mode dengan queue upload
+
+#### 3.2.2 Checklist Survey Digital
+- *ID*: FR-SRV-002
+- *Deskripsi*: Form checklist yang dapat diisi surveyor
+- *Checklist Items*:
+  - Ketersediaan listrik (Ya/Tidak/Catatan)
+  - Ketersediaan air (Ya/Tidak/Catatan)
+  - Akses jalan (Mudah/Sedang/Sulit)
+  - Status izin (Ada/Proses/Belum)
+  - Kondisi existing (Baik/Sedang/Buruk)
+  - Luas area (m²)
+  - Custom checklist items
+
+#### 3.2.3 GPS/Maps Integration
+- *ID*: FR-SRV-003
+- *Deskripsi*: Auto-capture lokasi survey
+- *Features*:
+  - Auto GPS coordinate capture
+  - Show on map (Google Maps integration)
+  - Geofencing untuk validasi lokasi
+  - Route tracking surveyor
+
+### 3.3 Pipeline Proyek (Sales Funnel)
+
+#### 3.3.1 Tahapan Pipeline
+- *ID*: FR-PIPE-001
+- *Deskripsi*: Tracking progress proyek dalam pipeline
+- *Tahapan*:
+  1. Lead Masuk
+  2. Penjadwalan Survey
+  3. Survey Dilakukan
+  4. Penawaran Dibuat
+  5. Negosiasi
+  6. Deal/Kontrak
+  7. Eksekusi Proyek
+  8. Selesai/Close
+
+#### 3.3.2 Status Progress Visual
+- *ID*: FR-PIPE-002
+- *Deskripsi*: Visualisasi pipeline dalam bentuk kanban/funnel
+- *Features*:
+  - Drag & drop untuk ubah status
+  - Color coding berdasarkan urgency
+  - Quick view detail proyek
+  - Filter by date/status/value
+
+#### 3.3.3 Conversion Tracking
+- *ID*: FR-PIPE-003
+- *Deskripsi*: Track conversion rate antar tahapan
+- *Metrics*:
+  - Lead to Survey conversion
+  - Survey to Quotation conversion
+  - Quotation to Deal conversion
+  - Average time per stage
+
+### 3.4 Kontrol Akses User (Role-based Access)
+
+#### 3.4.1 Role Admin
+- *ID*: FR-ROLE-001
+- *Akses*:
+  - Semua fitur dan data
+  - User management
+  - System configuration
+  - Backup & restore
+
+#### 3.4.2 Role Manager
+- *ID*: FR-ROLE-002
+- *Akses*:
+  - Dashboard & laporan
+  - View semua data klien/proyek
+  - Approval penawaran
+  - Export reports
+
+#### 3.4.3 Role Marketing/CS
+- *ID*: FR-ROLE-003
+- *Akses*:
+  - Data klien (CRUD)
+  - Status proyek (view only)
+  - Create penawaran
+  - Follow up tracking
+
+#### 3.4.4 Role Surveyor
+- *ID*: FR-ROLE-004
+- *Akses*:
+  - View tugas survey assigned
+  - Input hasil survey
+  - Upload foto & dokumen survey
+  - Update status survey
+
+### 3.5 Upload & Dokumen
+
+#### 3.5.1 Manajemen Dokumen
+- *ID*: FR-DOC-001
+- *Deskripsi*: Upload dan organize dokumen proyek
+- *Jenis Dokumen*:
+  - Penawaran (PDF)
+  - Surat Perjanjian/Kontrak
+  - Invoice
+  - Foto Survey
+  - Gambar Desain
+  - Progress Report
+
+#### 3.5.2 Document Linking
+- *ID*: FR-DOC-002
+- *Deskripsi*: Link dokumen ke klien/proyek
+- *Features*:
+  - Auto categorization
+  - Version control
+  - Preview dokumen
+  - Download batch
+
+### 3.6 Notifikasi & Reminder
+
+#### 3.6.1 Sistem Notifikasi
+- *ID*: FR-NOTIF-001
+- *Deskripsi*: Notifikasi otomatis untuk berbagai event
+- *Jenis Notifikasi*:
+  - Survey baru assigned
+  - Reminder follow-up penawaran
+  - Proyek akan mulai (H-3)
+  - Deadline survey
+  - Penawaran expired
+
+#### 3.6.2 Channel Notifikasi
+- *ID*: FR-NOTIF-002
+- *Delivery Channel*:
+  - In-app notification
+  - Email notification
+  - WhatsApp (optional)
+  - Push notification (mobile)
+
+### 3.7 Dashboard Ringkas untuk Pimpinan
+
+#### 3.7.1 Dashboard Overview
+- *ID*: FR-DASH-001
+- *Metrics Utama*:
+  - Jumlah proyek aktif/selesai/gagal
+  - Jumlah klien baru (bulan ini)
+  - Status survey tertunda
+  - Nilai proyek berjalan
+  - Pipeline value total
+
+#### 3.7.2 Visual Charts
+- *ID*: FR-DASH-002
+- *Visualisasi*:
+  - Pie chart status proyek
+  - Bar chart monthly revenue
+  - Funnel chart pipeline
+  - Timeline proyek aktif
+
+---
+
+## 4. KEBUTUHAN NON-FUNGSIONAL
+
+### 4.1 Performa
+- *NFR-PERF-001*: Response time < 2 detik untuk load page
+- *NFR-PERF-002*: Support offline mode untuk survey form
+- *NFR-PERF-003*: Auto-sync saat online kembali
+
+### 4.2 Keamanan & Backup
+- *NFR-SEC-001*: Login aman dengan 2FA optional
+- *NFR-SEC-002*: Enkripsi file dan data penting
+- *NFR-SEC-003*: Backup otomatis mingguan
+- *NFR-SEC-004*: SSL certificate untuk HTTPS
+- *NFR-SEC-005*: Session management yang aman
+
+### 4.3 Mobile Responsiveness
+- *NFR-MOB-001*: Fully responsive design (Bootstrap/Tailwind)
+- *NFR-MOB-002*: Touch-friendly interface untuk surveyor
+- *NFR-MOB-003*: Optimized untuk bandwidth rendah
+- *NFR-MOB-004*: Progressive Web App (PWA) capability
+
+### 4.4 Usability
+- *NFR-USE-001*: Interface sederhana untuk surveyor
+- *NFR-USE-002*: Maximum 3 clicks untuk akses fitur utama
+- *NFR-USE-003*: Auto-save untuk form panjang
+- *NFR-USE-004*: Bulk operations support
+
+---
+
+## 5. ARSITEKTUR SISTEM
+
+### 5.1 Technology Stack
+tools dan teknologi yang digunakan dalam aplikasi CRM yang saya buat:
+- Laravel Framework 12.19.3
+- Spatie Laravel Permission 6.20.0
+- PHP 8.3.12
+- Intervention Image 3.11.3
+- Laravel Excel 3.1.64
+- PDF (dompdf) v3.1.1
+- Node.js & NPM v20.18.0
+- MySQL Ver 8.0.30
+  - PWA untuk mobile access
+- *Additional Libraries*:
+  - Laravel Sanctum (API Authentication)
+  - Spatie Permission (Role Management)
+  - Laravel Excel (Export/Import)
+  - Intervention Image (Photo processing)
+  - Laravel Queue (Background jobs)
+  - Laravel Echo & Pusher (Real-time notification)
+
+### 5.2 API untuk Mobile Access
+- *RESTful API* endpoints untuk surveyor mobile
+- *JSON* response format
+- *Token-based* authentication
+- *Offline queue* mechanism
+
+### 5.3 Database Schema (Core Tables)
+sql
+1. clients (klien)
+2. projects (proyek) 
+3. surveys (data survey)
+4. survey_checklists (template checklist)
+5. survey_checklist_items (items checklist)
+6. survey_responses (jawaban checklist)
+7. survey_photos (foto survey)
+8. pipeline_stages (tahapan pipeline)
+9. project_pipelines (tracking pipeline)
+10. documents (dokumen upload)
+11. notifications (notifikasi)
+12. users (pengguna)
+13. roles & permissions (Spatie tables)
+
+
+### 5.4 Mobile Implementation Options
+1. *Option 1: Responsive Web (Recommended)*
+   - PWA dengan offline capability
+   - Service worker untuk caching
+   - IndexedDB untuk offline storage
+
+2. *Option 2: Hybrid Mobile*
+   - Laravel API Backend
+   - React Native/Flutter Frontend
+   - More complex, butuh resource lebih
+
+---
+
+## 6. IMPLEMENTATION PHASES
+
+### Phase 1 (Minggu 1-4): Foundation
+- Setup Laravel project & database
+- Authentication & role management
+- Basic CRUD klien & proyek
+- Responsive layout
+
+### Phase 2 (Minggu 5-8): Core Survey Features
+- Survey management module
+- Mobile-friendly survey form
+- Photo upload & GPS integration
+- Offline capability
+
+### Phase 3 (Minggu 9-12): Pipeline & Documents
+- Pipeline visualization
+- Document management
+- Notification system
+- Dashboard development
+
+### Phase 4 (Minggu 13-16): Polish & Deploy
+- Testing & bug fixes
+- Performance optimization
+- Security hardening
+- User training
+- Production deployment
+
+---
+
+## 7. SECURITY REQUIREMENTS
+
+### 7.1 Authentication
+- Strong password policy
+- Optional 2FA dengan Google Authenticator
+- Session timeout configuration
+- Login attempt limiting
+
+### 7.2 Data Protection
+- Database encryption untuk sensitive data
+- File upload virus scanning
+- SQL injection prevention (Laravel ORM)
+- XSS protection
+
+### 7.3 Backup Strategy
+- Daily database backup
+- Weekly full backup
+- Off-site backup storage
+- Restore procedure testing
+
+---
+
+## 8. TESTING REQUIREMENTS
+
+### 8.1 Unit Testing
+- Feature test untuk setiap module
+- Laravel PHPUnit implementation
+
+### 8.2 Mobile Testing
+- Test on various devices
+- Offline/online transition test
+- GPS accuracy test
+- Photo upload stress test
+
+### 8.3 User Acceptance Testing
+- Scenario test dengan surveyor real
+- Load testing untuk concurrent users
+- Security penetration testing
+
+---
+
+## 9. MAINTENANCE & SUPPORT
+
+### 9.1 Post-Launch Support
+- Bug fixing period 6 bulan
+- Monthly security patches
+- Performance monitoring
+- User feedback implementation
+
+### 9.2 Documentation
+- User manual per role
+- API documentation
+- System administration guide
+- Troubleshooting guide
+
+---
+
+## 10. PROJECT DELIVERABLES
+
+1. *Source Code* dengan dokumentasi
+2. *Database* schema dan migration files
+3. *User Manual* untuk setiap role
+4. *Admin Guide* untuk IT team
+5. *API Documentation* (jika ada mobile app)
+6. *Training Session* untuk users
+7. *Deployment Guide*
+
+---
+
+*Catatan*: Dokumen ini fokus pada kebutuhan spesifik Hansen Construction dengan emphasis pada mobile survey capability dan pipeline management. Implementasi dapat disesuaikan berdasarkan feedback user dan resource availability.
+
+User Journey & Implementation Guide
+CRM PT Hansen Karya Mandiri
+
+🎯 OVERVIEW ALUR BISNIS UTAMA
+Pipeline Proyek Hansen Construction:
+Lead Masuk → Penjadwalan Survey → Survey Lapangan → Penawaran → 
+Negosiasi → Deal/Kontrak → Eksekusi → Selesai
+
+👤 USER JOURNEY BY ROLE
+1. ADMIN USER JOURNEY
+A. Login & Dashboard
+1. Admin login ke sistem (dengan optional 2FA)
+2. Melihat dashboard dengan:
+   - Total users aktif
+   - System health status
+   - Backup status terakhir
+   - Activity log terbaru
+B. User Management
+1. Menu: Settings → User Management
+2. Actions:
+   - Create user baru (assign role)
+   - Edit user (ganti role, reset password)
+   - Activate/Deactivate user
+   - Lihat login history per user
+C. System Configuration
+1. Konfigurasi Pipeline Stages
+   - Tambah/edit/hapus tahapan pipeline
+   - Set warna untuk setiap stage
+   - Atur urutan stages
+
+2. Konfigurasi Checklist Survey
+   - Create template checklist
+   - Add checklist items
+   - Set mandatory/optional items
+
+3. Notification Settings
+   - Set email templates
+   - Configure reminder timing
+   - WhatsApp integration settings
+D. Backup & Maintenance
+1. Manual backup trigger
+2. Lihat backup history
+3. Restore dari backup
+4. System logs viewer
+Fitur yang harus ada:
+
+ Halaman user management dengan CRUD
+ Role & permission assignment UI
+ Pipeline stage configuration
+ Survey checklist template builder
+ Backup management interface
+ System logs viewer
+
+
+2. MANAGER USER JOURNEY
+A. Login & Executive Dashboard
+1. Manager login
+2. Dashboard menampilkan:
+   - Ringkasan Pipeline (visual funnel)
+   - Proyek aktif vs selesai (pie chart)
+   - Revenue MTD & YTD (bar chart)
+   - Team performance metrics
+   - Pending approvals count
+B. Pipeline Overview
+1. Menu: Pipeline → Overview
+2. Lihat semua proyek dalam pipeline
+3. Filter by:
+   - Date range
+   - Project value
+   - Sales person
+   - Stage
+4. Drill down ke detail proyek
+C. Approval Workflow
+1. Notification: "3 penawaran menunggu approval"
+2. Klik notification → List penawaran
+3. Review penawaran:
+   - Lihat detail proyek
+   - Lihat hasil survey
+   - Check margin & pricing
+4. Actions: Approve / Reject with notes
+D. Reports & Analytics
+1. Menu: Reports
+2. Available reports:
+   - Sales Performance Report
+   - Conversion Rate Analysis
+   - Survey to Deal Report
+   - Client Portfolio Report
+3. Export to Excel/PDF
+Fitur yang harus ada:
+
+ Executive dashboard dengan charts
+ Pipeline kanban view dengan filters
+ Approval queue interface
+ Report generator dengan export
+ Drill-down capability untuk analytics
+
+
+3. MARKETING/CS USER JOURNEY
+A. Lead Management
+1. Login → Dashboard Marketing
+2. Quick Actions:
+   - Add New Lead
+   - Follow Up Today
+   - Pending Surveys
+
+3. Add New Lead Flow:
+   - Input client data
+   - Select lead source
+   - Add initial notes
+   - Auto-assign ke pipeline stage "Lead Masuk"
+B. Client Interaction
+1. Menu: Clients → All Clients
+2. Search/filter clients
+3. Click client → Client Detail Page:
+   - Contact info
+   - Interaction history
+   - Projects history
+   - Documents
+   
+4. Log Interaction:
+   - Type: Call/Email/WhatsApp/Meeting
+   - Notes
+   - Next follow-up date
+C. Survey Scheduling
+1. Dari client page → "Schedule Survey"
+2. Form:
+   - Pilih surveyor (lihat availability)
+   - Set tanggal & waktu
+   - Add notes untuk surveyor
+   - Input alamat lengkap
+3. Submit → Auto notification ke surveyor
+D. Quotation Creation
+1. After survey done → "Create Quotation"
+2. Quotation builder:
+   - Auto-fill client & project info
+   - Add line items
+   - Calculate total
+   - Set validity date
+3. Preview → Send for approval
+4. After approved → Send to client
+E. Follow-up Management
+1. Dashboard shows follow-up reminders
+2. Click reminder → Client page
+3. Update status after follow-up
+4. Set next reminder if needed
+Fitur yang harus ada:
+
+ Lead quick-add form
+ Client 360° view page
+ Interaction log with timeline
+ Survey scheduler dengan calendar view
+ Quotation builder dengan template
+ Follow-up reminder system
+
+
+4. SURVEYOR USER JOURNEY (MOBILE-FIRST)
+A. Login & Task Dashboard
+1. Login via mobile browser
+2. Dashboard shows:
+   - Today's surveys (dengan map)
+   - Pending surveys
+   - Completed this week
+B. Survey Execution Flow
+1. Click survey task → Detail page:
+   - Client name & contact
+   - Address dengan "Open in Maps" button
+   - Special notes dari CS
+   
+2. "Start Survey" button → Check GPS location
+
+3. Survey Form (offline capable):
+   a. Take Photos:
+      - Foto tampak depan
+      - Foto area kerja
+      - Foto kondisi khusus
+      - (Auto-compress, max 10MB)
+   
+   b. Fill Checklist:
+      - Listrik: ✓ Ada / ✗ Tidak / Notes
+      - Air: ✓ Ada / ✗ Tidak / Notes
+      - Akses Jalan: Mudah/Sedang/Sulit
+      - Luas Area: [___] m²
+      - Custom items
+   
+   c. Add Notes:
+      - General observations
+      - Potential issues
+      - Special requirements
+   
+4. "Submit Survey"
+   - If online: Upload immediately
+   - If offline: Save to queue
+C. Offline Mode Handling
+1. Service worker detects offline
+2. Form data saved to IndexedDB
+3. Photos compressed & queued
+4. Status indicator: "3 surveys pending sync"
+5. When online: Auto-sync with progress bar
+D. Survey History
+1. Menu: My Surveys → History
+2. List of completed surveys
+3. Can view but not edit
+4. See sync status
+Fitur yang harus ada:
+
+ Mobile-optimized UI (large buttons, touch-friendly)
+ GPS integration dengan validation
+ Camera integration untuk multiple photos
+ Offline form dengan queue system
+ Auto-sync mechanism
+ Progressive Web App setup
+ 
+ 🔐 SECURITY CHECKPOINTS
+
+Authentication
+
+Rate limiting login attempts
+Password complexity rules
+Session timeout (configurable)
+2FA implementation
+
+
+Authorization
+
+Middleware untuk setiap route
+API resource permissions
+File access control
+
+
+Data Protection
+
+Encrypt sensitive fields
+Secure file upload
+SQL injection prevention
+XSS protection
+
+📊 KPI TRACKING IMPLEMENTATION
+Dashboard harus track:
+
+Lead Metrics
+
+New leads per source
+Lead response time
+Lead to survey conversion
+
+
+Survey Metrics
+
+Surveys completed per day
+Average survey duration
+Photo quality score
+
+
+Sales Metrics
+
+Pipeline value
+Win/loss ratio
+Average deal size
+Sales cycle length
+
+
+Performance Metrics
+
+User activity levels
+System response time
+Error rates
+
+tools dan teknologi yang digunakan dalam aplikasi CRM yang saya buat:
+- Laravel Framework 12.19.3
+- Spatie Laravel Permission 6.20.0
+- PHP 8.3.12
+- Intervention Image 3.11.3
+- Laravel Excel 3.1.64
+- PDF (dompdf) v3.1.1
+- Node.js & NPM v20.18.0
+- MySQL Ver 8.0.30

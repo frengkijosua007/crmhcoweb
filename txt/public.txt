@@ -1,0 +1,579 @@
+public\css\custom.css:
+/* Variables */
+:root {
+    --primary-color: #1a73e8;
+    --secondary-color: #5f6368;
+    --success-color: #1e8e3e;
+    --danger-color: #d93025;
+    --warning-color: #f9ab00;
+    --info-color: #1967d2;
+    --light-color: #f8f9fa;
+    --dark-color: #202124;
+    --sidebar-width: 280px;
+    --navbar-height: 64px;
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* Global Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--dark-color);
+    background-color: #f5f5f5;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--dark-color);
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    height: var(--navbar-height);
+    z-index: 1040;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: var(--primary-color) !important;
+}
+
+.navbar .nav-link {
+    color: var(--secondary-color);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: var(--transition);
+}
+
+.navbar .nav-link:hover {
+    color: var(--primary-color);
+}
+
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: var(--navbar-height);
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 20px 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-right: 1px solid #e0e0e0;
+    width: var(--sidebar-width);
+    transition: var(--transition);
+}
+
+.sidebar .nav-link {
+    color: var(--secondary-color);
+    padding: 0.75rem 1.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0 25px 25px 0;
+    transition: var(--transition);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(26, 115, 232, 0.08);
+    color: var(--primary-color);
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(26, 115, 232, 0.12);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.sidebar .nav-link i {
+    width: 24px;
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+/* Main Content */
+main {
+    margin-top: var(--navbar-height);
+    margin-left: var(--sidebar-width);
+    min-height: calc(100vh - var(--navbar-height));
+    transition: var(--transition);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    transition: var(--transition);
+    background-color: #fff;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1.25rem;
+    font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: var(--transition);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #1557b0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Forms */
+.form-control, .form-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    transition: var(--transition);
+    font-size: 14px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Tables */
+.table {
+    background-color: #fff;
+}
+
+.table thead th {
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: 600;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Stats Cards */
+.stat-card {
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 1rem;
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card .stat-label {
+    color: var(--secondary-color);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Pipeline Kanban */
+.kanban-board {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+.kanban-column {
+    min-width: 300px;
+    background-color: #f5f5f5;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+.kanban-column-header {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kanban-card {
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: move;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: var(--transition);
+}
+
+.kanban-card:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.kanban-card.dragging {
+    opacity: 0.5;
+}
+
+/* Notifications */
+.notification-bell {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        margin-left: -var(--sidebar-width);
+    }
+    
+    .sidebar.show {
+        margin-left: 0;
+    }
+    
+    main {
+        margin-left: 0;
+    }
+    
+    .kanban-board {
+        flex-direction: column;
+    }
+    
+    .kanban-column {
+        min-width: 100%;
+    }
+}
+
+/* Survey Mobile UI */
+.survey-mobile-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.photo-upload-area {
+    border: 2px dashed var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.photo-upload-area:hover {
+    background-color: rgba(26, 115, 232, 0.05);
+}
+
+.photo-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+/* Loading States */
+.skeleton {
+    animation: skeleton-loading 1s linear infinite alternate;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-color: hsl(200, 20%, 80%);
+    }
+    100% {
+        background-color: hsl(200, 20%, 95%);
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+public\css\mobile.css:
+/* Mobile Specific Styles */
+.mobile-body {
+    padding-top: 60px;
+    padding-bottom: 70px;
+    background-color: #f5f5f5;
+}
+
+.mobile-header {
+    height: 60px;
+    z-index: 1030;
+}
+
+.mobile-main {
+    min-height: calc(100vh - 130px);
+}
+
+.mobile-bottom-nav {
+    height: 60px;
+    z-index: 1030;
+}
+
+.mobile-bottom-nav .nav-link {
+    color: #6c757d;
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    position: relative;
+}
+
+.mobile-bottom-nav .nav-link i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.mobile-bottom-nav .nav-link span {
+    font-size: 11px;
+}
+
+.mobile-bottom-nav .nav-link.active {
+    color: var(--primary-color);
+}
+
+.mobile-bottom-nav .badge {
+    position: absolute;
+    top: 5px;
+    right: 30%;
+    font-size: 9px;
+    padding: 2px 5px;
+}
+
+/* Mobile Cards */
+.mobile-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Mobile Form Elements */
+.mobile-form .form-control,
+.mobile-form .form-select {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px 16px;
+    border-radius: 8px;
+}
+
+.mobile-form .form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* Photo Upload Mobile */
+.photo-capture-btn {
+    width: 100%;
+    height: 200px;
+    border: 2px dashed var(--primary-color);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(26, 115, 232, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.photo-capture-btn:active {
+    transform: scale(0.98);
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.photo-grid img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Offline Banner */
+.offline-banner {
+    background-color: #ffc107;
+    color: #000;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    z-index: 1020;
+}
+
+/* Loading States */
+.mobile-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Mobile Specific Utilities */
+@media (max-width: 576px) {
+    .hide-mobile {
+        display: none !important;
+    }
+    
+    .container-fluid {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+    
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    .modal-content {
+        height: 100%;
+        border-radius: 0;
+    }
+}
+
+public\storage\avatars
+public\storage\documents\clients
+public\storage\documents\projects
+public\storage\reports
+public\storage\settings
+public\storage\surveys
+
+public\index.php:
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+// Register the Composer autoloader...
+require __DIR__.'/../vendor/autoload.php';
+
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+$app->handleRequest(Request::capture());

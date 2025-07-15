@@ -1,0 +1,1077 @@
+database\factories\UserFactory.php:
+<?php
+
+namespace Database\Factories;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ */
+class UserFactory extends Factory
+{
+    /**
+     * The current password being used by the factory.
+     */
+    protected static ?string $password;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
+            'password' => static::$password ??= Hash::make('password'),
+            'remember_token' => Str::random(10),
+        ];
+    }
+
+    /**
+     * Indicate that the model's email address should be unverified.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+}
+
+database\migrations\0001_01_01_000000_create_users_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->rememberToken();
+            $table->timestamps();
+        });
+
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('sessions');
+    }
+};
+
+database\migrations\0001_01_01_000001_create_cache_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('cache', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->mediumText('value');
+            $table->integer('expiration');
+        });
+
+        Schema::create('cache_locks', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->integer('expiration');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('cache');
+        Schema::dropIfExists('cache_locks');
+    }
+};
+
+database\migrations\0001_01_01_000002_create_jobs_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('queue')->index();
+            $table->longText('payload');
+            $table->unsignedTinyInteger('attempts');
+            $table->unsignedInteger('reserved_at')->nullable();
+            $table->unsignedInteger('available_at');
+            $table->unsignedInteger('created_at');
+        });
+
+        Schema::create('job_batches', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('name');
+            $table->integer('total_jobs');
+            $table->integer('pending_jobs');
+            $table->integer('failed_jobs');
+            $table->longText('failed_job_ids');
+            $table->mediumText('options')->nullable();
+            $table->integer('cancelled_at')->nullable();
+            $table->integer('created_at');
+            $table->integer('finished_at')->nullable();
+        });
+
+        Schema::create('failed_jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('uuid')->unique();
+            $table->text('connection');
+            $table->text('queue');
+            $table->longText('payload');
+            $table->longText('exception');
+            $table->timestamp('failed_at')->useCurrent();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('jobs');
+        Schema::dropIfExists('job_batches');
+        Schema::dropIfExists('failed_jobs');
+    }
+};
+
+database\migrations\2025_06_21_142906_add_fields_to_users_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('phone')->nullable()->after('email');
+            $table->text('address')->nullable()->after('phone');
+            $table->boolean('is_active')->default(true)->after('address');
+            $table->string('profile_photo')->nullable()->after('is_active');
+        });
+    }
+
+    public function down()
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['phone', 'address', 'is_active', 'profile_photo']);
+        });
+    }
+};
+
+database\migrations\2025_06_21_142950_create_clients_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('clients', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->nullable();
+            $table->string('phone');
+            $table->string('whatsapp')->nullable();
+            $table->text('address');
+            $table->enum('status', ['prospek', 'aktif', 'selesai'])->default('prospek');
+            $table->foreignId('pic_id')->constrained('users');
+            $table->enum('source', ['referral', 'website', 'walk-in', 'social-media', 'other']);
+            $table->string('source_detail')->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('clients');
+    }
+};
+
+database\migrations\2025_06_21_143025_create_projects_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('projects', function (Blueprint $table) {
+            $table->id();
+            $table->string('code')->unique();
+            $table->string('name');
+            $table->enum('type', ['kantor', 'showroom', 'kafe', 'restoran', 'outlet', 'other']);
+            $table->text('location');
+            $table->date('start_date')->nullable();
+            $table->date('target_date')->nullable();
+            $table->enum('status', ['lead', 'survey', 'penawaran', 'negosiasi', 'deal', 'eksekusi', 'selesai', 'batal']);
+            $table->decimal('project_value', 15, 2)->nullable();
+            $table->decimal('deal_value', 15, 2)->nullable();
+            $table->foreignId('client_id')->constrained('clients');
+            $table->foreignId('pic_id')->constrained('users');
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('projects');
+    }
+};
+
+database\migrations\2025_06_21_143043_create_surveys_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('surveys', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained('projects');
+            $table->foreignId('surveyor_id')->constrained('users');
+            $table->datetime('scheduled_date');
+            $table->datetime('actual_date')->nullable();
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled']);
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->text('address')->nullable();
+            $table->text('notes')->nullable();
+            $table->json('checklist_data')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('surveys');
+    }
+};
+
+database\migrations\2025_06_21_143120_create_survey_photos_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('survey_photos', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('survey_id')->constrained('surveys')->onDelete('cascade');
+            $table->string('filename');
+            $table->string('path');
+            $table->string('caption')->nullable();
+            $table->integer('order')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('survey_photos');
+    }
+};
+
+database\migrations\2025_06_21_143141_create_pipeline_stages_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('pipeline_stages', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('slug');
+            $table->string('color')->default('#6c757d');
+            $table->integer('order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('pipeline_stages');
+    }
+};
+
+database\migrations\2025_06_21_150906_create_permission_tables.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        $teams = config('permission.teams');
+        $tableNames = config('permission.table_names');
+        $columnNames = config('permission.column_names');
+        $pivotRole = $columnNames['role_pivot_key'] ?? 'role_id';
+        $pivotPermission = $columnNames['permission_pivot_key'] ?? 'permission_id';
+
+        throw_if(empty($tableNames), new Exception('Error: config/permission.php not loaded. Run [php artisan config:clear] and try again.'));
+        throw_if($teams && empty($columnNames['team_foreign_key'] ?? null), new Exception('Error: team_foreign_key on config/permission.php not loaded. Run [php artisan config:clear] and try again.'));
+
+        Schema::create($tableNames['permissions'], static function (Blueprint $table) {
+            // $table->engine('InnoDB');
+            $table->bigIncrements('id'); // permission id
+            $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
+            $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
+            $table->timestamps();
+
+            $table->unique(['name', 'guard_name']);
+        });
+
+        Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
+            // $table->engine('InnoDB');
+            $table->bigIncrements('id'); // role id
+            if ($teams || config('permission.testing')) { // permission.testing is a fix for sqlite testing
+                $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
+                $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
+            }
+            $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
+            $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
+            $table->timestamps();
+            if ($teams || config('permission.testing')) {
+                $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
+            } else {
+                $table->unique(['name', 'guard_name']);
+            }
+        });
+
+        Schema::create($tableNames['model_has_permissions'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotPermission, $teams) {
+            $table->unsignedBigInteger($pivotPermission);
+
+            $table->string('model_type');
+            $table->unsignedBigInteger($columnNames['model_morph_key']);
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
+
+            $table->foreign($pivotPermission)
+                ->references('id') // permission id
+                ->on($tableNames['permissions'])
+                ->onDelete('cascade');
+            if ($teams) {
+                $table->unsignedBigInteger($columnNames['team_foreign_key']);
+                $table->index($columnNames['team_foreign_key'], 'model_has_permissions_team_foreign_key_index');
+
+                $table->primary([$columnNames['team_foreign_key'], $pivotPermission, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_permissions_permission_model_type_primary');
+            } else {
+                $table->primary([$pivotPermission, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_permissions_permission_model_type_primary');
+            }
+
+        });
+
+        Schema::create($tableNames['model_has_roles'], static function (Blueprint $table) use ($tableNames, $columnNames, $pivotRole, $teams) {
+            $table->unsignedBigInteger($pivotRole);
+
+            $table->string('model_type');
+            $table->unsignedBigInteger($columnNames['model_morph_key']);
+            $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_roles_model_id_model_type_index');
+
+            $table->foreign($pivotRole)
+                ->references('id') // role id
+                ->on($tableNames['roles'])
+                ->onDelete('cascade');
+            if ($teams) {
+                $table->unsignedBigInteger($columnNames['team_foreign_key']);
+                $table->index($columnNames['team_foreign_key'], 'model_has_roles_team_foreign_key_index');
+
+                $table->primary([$columnNames['team_foreign_key'], $pivotRole, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_roles_role_model_type_primary');
+            } else {
+                $table->primary([$pivotRole, $columnNames['model_morph_key'], 'model_type'],
+                    'model_has_roles_role_model_type_primary');
+            }
+        });
+
+        Schema::create($tableNames['role_has_permissions'], static function (Blueprint $table) use ($tableNames, $pivotRole, $pivotPermission) {
+            $table->unsignedBigInteger($pivotPermission);
+            $table->unsignedBigInteger($pivotRole);
+
+            $table->foreign($pivotPermission)
+                ->references('id') // permission id
+                ->on($tableNames['permissions'])
+                ->onDelete('cascade');
+
+            $table->foreign($pivotRole)
+                ->references('id') // role id
+                ->on($tableNames['roles'])
+                ->onDelete('cascade');
+
+            $table->primary([$pivotPermission, $pivotRole], 'role_has_permissions_permission_id_role_id_primary');
+        });
+
+        app('cache')
+            ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
+            ->forget(config('permission.cache.key'));
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        $tableNames = config('permission.table_names');
+
+        if (empty($tableNames)) {
+            throw new \Exception('Error: config/permission.php not found and defaults could not be merged. Please publish the package configuration before proceeding, or drop the tables manually.');
+        }
+
+        Schema::drop($tableNames['role_has_permissions']);
+        Schema::drop($tableNames['model_has_roles']);
+        Schema::drop($tableNames['model_has_permissions']);
+        Schema::drop($tableNames['roles']);
+        Schema::drop($tableNames['permissions']);
+    }
+};
+
+database\migrations\2025_06_21_190248_create_model_names_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('model_names', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('model_names');
+    }
+};
+
+
+database\migrations\2025_06_24_152843_create_project_pipelines_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('project_pipelines', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained('projects');
+            $table->string('from_status')->nullable();
+            $table->string('to_status');
+            $table->foreignId('changed_by')->constrained('users');
+            $table->datetime('changed_at');
+            $table->text('notes')->nullable();
+            $table->timestamps();
+            
+            $table->index(['project_id', 'changed_at']);
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('project_pipelines');
+    }
+
+    
+};
+
+database\migrations\2025_06_24_153832_create_documents_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('documents', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('original_name');
+            $table->string('category'); // penawaran, kontrak, invoice, survey, design, progress, other
+            $table->string('type'); // pdf, image, word, excel, other
+            $table->text('description')->nullable();
+            $table->string('path');
+            $table->bigInteger('size');
+            $table->string('extension', 10);
+            $table->morphs('documentable'); // polymorphic relation
+            $table->foreignId('uploaded_by')->constrained('users');
+            $table->boolean('is_public')->default(false);
+            $table->integer('views')->default(0);
+            $table->integer('downloads')->default(0);
+            $table->timestamps();
+            
+            $table->index(['documentable_type', 'documentable_id']);
+            $table->index('category');
+            $table->index('type');
+            $table->index('uploaded_by');
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('documents');
+    }
+};
+
+database\migrations\2025_06_24_164359_add_project_id_to_documents_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up()
+    {
+        Schema::table('documents', function (Blueprint $table) {
+            $table->foreignId('project_id')->nullable()->constrained('projects');
+        });
+    }
+
+
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        Schema::table('documents', function (Blueprint $table) {
+            $table->dropForeign(['project_id']);
+            $table->dropColumn('project_id');
+        });
+    }
+
+
+};
+
+
+database\migrations\2025_06_25_155055_create_notifications_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('notifications');
+    }
+};
+
+
+database\migrations\2025_06_28_131602_create_settings_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('settings', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->string('group')->default('general');
+            $table->string('type')->default('string');
+            $table->timestamps();
+
+            // Add index for faster lookups
+            $table->index('group');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('settings');
+    }
+};
+
+database\migrations\2025_06_28_153133_add_fields_to_users_table.php:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+        public function up()
+        {
+            Schema::table('users', function (Blueprint $table) {
+                if (!Schema::hasColumn('users', 'phone')) {
+                    $table->string('phone')->nullable()->after('email');
+                }
+
+                // Add any other columns you need here
+                // Make sure to check for their existence too
+            });
+        }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['phone', 'address', 'avatar', 'is_active', 'last_login_at']);
+        });
+    }
+};
+
+
+
+database\seeders\DatabaseSeeder.php:
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    public function run()
+    {
+        $this->call([
+            UserSeeder::class,
+            PipelineStageSeeder::class,
+        ]);
+    }
+}
+
+database\seeders\PipelineStageSeeder.php:
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\PipelineStage;
+
+class PipelineStageSeeder extends Seeder
+{
+    public function run()
+    {
+        $stages = [
+            ['name' => 'Lead Masuk', 'slug' => 'lead', 'color' => '#6c757d', 'order' => 1],
+            ['name' => 'Penjadwalan Survey', 'slug' => 'scheduling', 'color' => '#17a2b8', 'order' => 2],
+            ['name' => 'Survey Dilakukan', 'slug' => 'survey', 'color' => '#ffc107', 'order' => 3],
+            ['name' => 'Penawaran Dibuat', 'slug' => 'quotation', 'color' => '#fd7e14', 'order' => 4],
+            ['name' => 'Negosiasi', 'slug' => 'negotiation', 'color' => '#6f42c1', 'order' => 5],
+            ['name' => 'Deal/Kontrak', 'slug' => 'deal', 'color' => '#28a745', 'order' => 6],
+            ['name' => 'Eksekusi Proyek', 'slug' => 'execution', 'color' => '#007bff', 'order' => 7],
+            ['name' => 'Selesai', 'slug' => 'completed', 'color' => '#20c997', 'order' => 8],
+        ];
+
+        foreach ($stages as $stage) {
+            PipelineStage::create($stage);
+        }
+    }
+}
+
+database\seeders\RoleSeeder.php:
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Models\User;
+
+class RoleSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Create roles
+        $roles = [
+            'admin' => 'Full access to all features',
+            'manager' => 'Manage projects, clients, and reports',
+            'marketing' => 'Manage clients and projects',
+            'surveyor' => 'Conduct surveys and upload reports',
+            'user' => 'Basic access'
+        ];
+
+        foreach ($roles as $name => $description) {
+            // Check if the role already exists before creating it
+            if (!Role::where('name', $name)->where('guard_name', 'web')->exists()) {
+                Role::create([
+                    'name' => $name,
+                    'guard_name' => 'web'
+                ]);
+            }
+        }
+
+        // Ensure at least one admin user exists
+        $admin = User::where('email', 'admin@example.com')->first();
+
+        if (!$admin) {
+            $admin = User::create([
+                'name' => 'Admin',
+                'email' => 'admin@example.com',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]);
+        }
+
+        // Make sure user has admin role
+        if (!$admin->hasRole('admin')) {
+            $admin->assignRole('admin');
+        }
+    }
+}
+
+
+database\seeders\SettingsSeeder.php:
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\Setting;
+
+class SettingsSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // General Settings
+        $this->createSetting('site_name', 'Project Management System', 'general', 'string');
+        $this->createSetting('site_description', 'Project and survey management system', 'general', 'string');
+        $this->createSetting('maintenance_mode', '0', 'general', 'boolean');
+        $this->createSetting('default_pagination', '20', 'general', 'integer');
+        $this->createSetting('date_format', 'd M Y', 'general', 'string');
+        $this->createSetting('time_format', 'H:i', 'general', 'string');
+        $this->createSetting('timezone', 'Asia/Jakarta', 'general', 'string');
+
+        // Company Settings
+        $this->createSetting('company_name', 'Your Company Name', 'company', 'string');
+        $this->createSetting('company_address', 'Company Address Line 1, Line 2', 'company', 'string');
+        $this->createSetting('company_phone', '+62 123 456 7890', 'company', 'string');
+        $this->createSetting('company_email', 'info@company.com', 'company', 'string');
+        $this->createSetting('company_website', 'https://company.com', 'company', 'string');
+        $this->createSetting('company_tax_id', '123456789', 'company', 'string');
+        $this->createSetting('invoice_prefix', 'INV', 'company', 'string');
+        $this->createSetting('currency', 'IDR', 'company', 'string');
+        $this->createSetting('fiscal_year_start', '01-01', 'company', 'string');
+
+        // Notification Settings
+        $this->createSetting('email_notifications', '1', 'notification', 'boolean');
+        $this->createSetting('survey_notifications', '1', 'notification', 'boolean');
+        $this->createSetting('project_status_notifications', '1', 'notification', 'boolean');
+        $this->createSetting('document_upload_notifications', '1', 'notification', 'boolean');
+        $this->createSetting('client_notifications', '1', 'notification', 'boolean');
+        $this->createSetting('notification_email', 'notifications@company.com', 'notification', 'string');
+        $this->createSetting('email_sender_name', 'Project Management System', 'notification', 'string');
+
+        // User Settings
+        $this->createSetting('default_role', 'user', 'user', 'string');
+        $this->createSetting('allow_registration', '0', 'user', 'boolean');
+        $this->createSetting('account_approval', '1', 'user', 'boolean');
+        $this->createSetting('password_min_length', '8', 'user', 'integer');
+        $this->createSetting('password_requires_letters', '1', 'user', 'boolean');
+        $this->createSetting('password_requires_numbers', '1', 'user', 'boolean');
+        $this->createSetting('password_requires_symbols', '0', 'user', 'boolean');
+        $this->createSetting('user_avatar_max_size', '2', 'user', 'integer');
+        $this->createSetting('inactive_user_days', '90', 'user', 'integer');
+    }
+
+    /**
+     * Create a setting if it doesn't exist
+     */
+    private function createSetting($key, $value, $group, $type)
+    {
+        Setting::firstOrCreate(
+            ['key' => $key],
+            [
+                'value' => $value,
+                'group' => $group,
+                'type' => $type
+            ]
+        );
+    }
+}
+
+
+database\seeders\UserSeeder.php:
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+
+class UserSeeder extends Seeder
+{
+    public function run()
+    {
+        // Create Roles
+        $roles = ['admin', 'manager', 'marketing', 'surveyor'];
+        foreach ($roles as $role) {
+            Role::firstOrCreate(['name' => $role]);
+        }
+        
+        // Create Permissions
+        $permissions = [
+            // Client permissions
+            'view-clients', 'create-clients', 'edit-clients', 'delete-clients',
+            // Project permissions
+            'view-projects', 'create-projects', 'edit-projects', 'delete-projects',
+            // Survey permissions
+            'view-surveys', 'create-surveys', 'edit-surveys', 'delete-surveys',
+            // Pipeline permissions
+            'view-pipeline', 'edit-pipeline',
+            // Document permissions
+            'view-documents', 'upload-documents', 'delete-documents',
+            // Report permissions
+            'view-reports', 'export-reports',
+            // User management
+            'manage-users', 'manage-roles',
+            // Settings
+            'manage-settings'
+        ];
+        
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+        
+        // Assign permissions to roles
+        $adminRole = Role::findByName('admin');
+        $adminRole->syncPermissions(Permission::all());
+        
+        $managerRole = Role::findByName('manager');
+        $managerRole->syncPermissions([
+            'view-clients', 'view-projects', 'view-surveys',
+            'view-pipeline', 'view-documents', 'view-reports',
+            'export-reports'
+        ]);
+        
+        $marketingRole = Role::findByName('marketing');
+        $marketingRole->syncPermissions([
+            'view-clients', 'create-clients', 'edit-clients',
+            'view-projects', 'create-projects', 'edit-projects',
+            'view-surveys', 'view-pipeline', 'edit-pipeline',
+            'view-documents', 'upload-documents'
+        ]);
+        
+        $surveyorRole = Role::findByName('surveyor');
+        $surveyorRole->syncPermissions([
+            'view-surveys', 'create-surveys', 'edit-surveys',
+            'upload-documents'
+        ]);
+        
+        // Create default users
+        $users = [
+            [
+                'name' => 'Admin Hansen',
+                'email' => 'admin@hansen.com',
+                'password' => Hash::make('password123'),
+                'role' => 'admin',
+                'phone' => '081234567890',
+                'address' => 'Jl. Sudirman No. 1, Jakarta',
+                'is_active' => true
+            ],
+            [
+                'name' => 'Manager Hansen',
+                'email' => 'manager@hansen.com',
+                'password' => Hash::make('password123'),
+                'role' => 'manager',
+                'phone' => '081234567891',
+                'address' => 'Jl. Thamrin No. 2, Jakarta',
+                'is_active' => true
+            ],
+            [
+                'name' => 'Marketing Hansen',
+                'email' => 'marketing@hansen.com',
+                'password' => Hash::make('password123'),
+                'role' => 'marketing',
+                'phone' => '081234567892',
+                'address' => 'Jl. Gatot Subroto No. 3, Jakarta',
+                'is_active' => true
+            ],
+            [
+                'name' => 'Surveyor Hansen',
+                'email' => 'surveyor@hansen.com',
+                'password' => Hash::make('password123'),
+                'role' => 'surveyor',
+                'phone' => '081234567893',
+                'address' => 'Jl. HR Rasuna Said No. 4, Jakarta',
+                'is_active' => true
+            ],
+            [
+                'name' => 'Surveyor 2',
+                'email' => 'surveyor2@hansen.com',
+                'password' => Hash::make('password123'),
+                'role' => 'surveyor',
+                'phone' => '081234567894',
+                'address' => 'Jl. Kuningan No. 5, Jakarta',
+                'is_active' => true
+            ]
+        ];
+        
+        foreach ($users as $userData) {
+            $role = $userData['role'];
+            unset($userData['role']);
+            
+            $user = User::firstOrCreate(
+                ['email' => $userData['email']],
+                $userData
+            );
+            
+            // Sync role (akan replace role lama jika ada)
+            $user->syncRoles([$role]);
+        }
+        
+        $this->command->info('Users seeded successfully!');
+    }
+}

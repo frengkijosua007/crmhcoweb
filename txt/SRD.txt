@@ -1,0 +1,446 @@
+# Software Requirements Document (SRD)
+## CRM PT Hansen Karya Mandiri (Hansen Construction)
+
+**Versi:** 2.0  
+**Tanggal:** Juni 2025  
+**Status:** Final Draft
+
+---
+
+## 1. PENDAHULUAN
+
+### 1.1 Tujuan Dokumen
+Dokumen ini menjelaskan spesifikasi kebutuhan perangkat lunak untuk sistem Customer Relationship Management (CRM) PT Hansen Karya Mandiri yang akan dibangun menggunakan Laravel, PHP, dan MySQL dengan fokus pada manajemen survey lapangan dan pipeline proyek.
+
+### 1.2 Ruang Lingkup
+Sistem CRM ini akan mencakup:
+- Database klien dan proyek terintegrasi
+- Manajemen survey dan tugas lapangan dengan akses mobile
+- Pipeline proyek (Sales Funnel)
+- Kontrol akses berbasis role
+- Manajemen dokumen
+- Sistem notifikasi dan reminder
+- Dashboard ringkas untuk pimpinan
+
+### 1.3 Definisi dan Singkatan
+- **CRM**: Customer Relationship Management
+- **PIC**: Person in Charge
+- **GPS**: Global Positioning System
+- **2FA**: Two-Factor Authentication
+- **API**: Application Programming Interface
+- **CS**: Customer Service
+
+---
+
+## 2. DESKRIPSI UMUM SISTEM
+
+### 2.1 Perspektif Produk
+CRM Hansen Construction adalah sistem berbasis web dengan akses mobile yang dirancang untuk mengelola pipeline proyek konstruksi dari tahap lead hingga selesai, dengan fitur khusus untuk survey lapangan real-time.
+
+### 2.2 Fungsi Utama Produk
+1. **Database Klien & Proyek**: Manajemen data klien dan proyek terintegrasi
+2. **Manajemen Survey & Tugas Lapangan**: Input data survey dari mobile
+3. **Pipeline Proyek**: Tracking status dari lead hingga selesai
+4. **Kontrol Akses User**: Role-based access control
+5. **Upload & Dokumen**: Manajemen dokumen proyek
+6. **Notifikasi & Reminder**: Sistem pengingat otomatis
+7. **Dashboard Pimpinan**: Ringkasan performa bisnis
+
+### 2.3 Karakteristik Pengguna
+1. **Admin**: Akses penuh ke seluruh sistem
+2. **Manager**: Akses laporan dan ringkasan
+3. **Marketing/CS**: Akses data klien dan status proyek
+4. **Surveyor**: Input survey dan lihat tugas
+
+### 2.4 Batasan Sistem
+- Sistem berbasis web responsive untuk desktop dan mobile
+- Fitur offline untuk form survey (dengan sinkronisasi)
+- Upload foto maksimal 10MB per file
+- GPS location tracking untuk surveyor
+
+---
+
+## 3. KEBUTUHAN FUNGSIONAL
+
+### 3.1 Database Klien & Proyek
+
+#### 3.1.1 Informasi Klien
+- **ID**: FR-DB-001
+- **Deskripsi**: Menyimpan dan mengelola data klien
+- **Fields**:
+  - Nama Klien
+  - Kontak (Telp, Email, WhatsApp)
+  - Alamat lengkap
+  - Status (Prospek/Aktif/Selesai)
+  - PIC (Person in Charge)
+  - Tanggal registrasi
+  - Sumber lead (Referral/Website/Walk-in/dll)
+
+#### 3.1.2 Informasi Proyek
+- **ID**: FR-DB-002
+- **Deskripsi**: Menyimpan data proyek konstruksi
+- **Fields**:
+  - Kode Proyek (Auto-generated)
+  - Nama Proyek
+  - Jenis Proyek (Kantor/Showroom/Kafe/Restoran/Outlet)
+  - Lokasi Proyek
+  - Tanggal Mulai
+  - Tanggal Selesai (Target)
+  - Status Proyek
+  - Nilai Proyek
+  - Klien ID (Relasi)
+
+#### 3.1.3 Relasi Klien-Proyek
+- **ID**: FR-DB-003
+- **Deskripsi**: Satu klien dapat memiliki beberapa proyek
+- **Features**:
+  - History proyek per klien
+  - Total nilai proyek per klien
+  - Status aktif proyek per klien
+
+### 3.2 Manajemen Survey & Tugas Lapangan
+
+#### 3.2.1 Input Data Survey Mobile
+- **ID**: FR-SRV-001
+- **Deskripsi**: Surveyor input data dari mobile/HP
+- **Features**:
+  - Upload foto lokasi (multiple photos)
+  - Catatan/kondisi lapangan (text area)
+  - Status survey (Pending/In Progress/Done)
+  - Tanggal & waktu otomatis
+  - GPS location capture otomatis
+  - Offline mode dengan queue upload
+
+#### 3.2.2 Checklist Survey Digital
+- **ID**: FR-SRV-002
+- **Deskripsi**: Form checklist yang dapat diisi surveyor
+- **Checklist Items**:
+  - Ketersediaan listrik (Ya/Tidak/Catatan)
+  - Ketersediaan air (Ya/Tidak/Catatan)
+  - Akses jalan (Mudah/Sedang/Sulit)
+  - Status izin (Ada/Proses/Belum)
+  - Kondisi existing (Baik/Sedang/Buruk)
+  - Luas area (m²)
+  - Custom checklist items
+
+#### 3.2.3 GPS/Maps Integration
+- **ID**: FR-SRV-003
+- **Deskripsi**: Auto-capture lokasi survey
+- **Features**:
+  - Auto GPS coordinate capture
+  - Show on map (Google Maps integration)
+  - Geofencing untuk validasi lokasi
+  - Route tracking surveyor
+
+### 3.3 Pipeline Proyek (Sales Funnel)
+
+#### 3.3.1 Tahapan Pipeline
+- **ID**: FR-PIPE-001
+- **Deskripsi**: Tracking progress proyek dalam pipeline
+- **Tahapan**:
+  1. Lead Masuk
+  2. Penjadwalan Survey
+  3. Survey Dilakukan
+  4. Penawaran Dibuat
+  5. Negosiasi
+  6. Deal/Kontrak
+  7. Eksekusi Proyek
+  8. Selesai/Close
+
+#### 3.3.2 Status Progress Visual
+- **ID**: FR-PIPE-002
+- **Deskripsi**: Visualisasi pipeline dalam bentuk kanban/funnel
+- **Features**:
+  - Drag & drop untuk ubah status
+  - Color coding berdasarkan urgency
+  - Quick view detail proyek
+  - Filter by date/status/value
+
+#### 3.3.3 Conversion Tracking
+- **ID**: FR-PIPE-003
+- **Deskripsi**: Track conversion rate antar tahapan
+- **Metrics**:
+  - Lead to Survey conversion
+  - Survey to Quotation conversion
+  - Quotation to Deal conversion
+  - Average time per stage
+
+### 3.4 Kontrol Akses User (Role-based Access)
+
+#### 3.4.1 Role Admin
+- **ID**: FR-ROLE-001
+- **Akses**:
+  - Semua fitur dan data
+  - User management
+  - System configuration
+  - Backup & restore
+
+#### 3.4.2 Role Manager
+- **ID**: FR-ROLE-002
+- **Akses**:
+  - Dashboard & laporan
+  - View semua data klien/proyek
+  - Approval penawaran
+  - Export reports
+
+#### 3.4.3 Role Marketing/CS
+- **ID**: FR-ROLE-003
+- **Akses**:
+  - Data klien (CRUD)
+  - Status proyek (view only)
+  - Create penawaran
+  - Follow up tracking
+
+#### 3.4.4 Role Surveyor
+- **ID**: FR-ROLE-004
+- **Akses**:
+  - View tugas survey assigned
+  - Input hasil survey
+  - Upload foto & dokumen survey
+  - Update status survey
+
+### 3.5 Upload & Dokumen
+
+#### 3.5.1 Manajemen Dokumen
+- **ID**: FR-DOC-001
+- **Deskripsi**: Upload dan organize dokumen proyek
+- **Jenis Dokumen**:
+  - Penawaran (PDF)
+  - Surat Perjanjian/Kontrak
+  - Invoice
+  - Foto Survey
+  - Gambar Desain
+  - Progress Report
+
+#### 3.5.2 Document Linking
+- **ID**: FR-DOC-002
+- **Deskripsi**: Link dokumen ke klien/proyek
+- **Features**:
+  - Auto categorization
+  - Version control
+  - Preview dokumen
+  - Download batch
+
+### 3.6 Notifikasi & Reminder
+
+#### 3.6.1 Sistem Notifikasi
+- **ID**: FR-NOTIF-001
+- **Deskripsi**: Notifikasi otomatis untuk berbagai event
+- **Jenis Notifikasi**:
+  - Survey baru assigned
+  - Reminder follow-up penawaran
+  - Proyek akan mulai (H-3)
+  - Deadline survey
+  - Penawaran expired
+
+#### 3.6.2 Channel Notifikasi
+- **ID**: FR-NOTIF-002
+- **Delivery Channel**:
+  - In-app notification
+  - Email notification
+  - WhatsApp (optional)
+  - Push notification (mobile)
+
+### 3.7 Dashboard Ringkas untuk Pimpinan
+
+#### 3.7.1 Dashboard Overview
+- **ID**: FR-DASH-001
+- **Metrics Utama**:
+  - Jumlah proyek aktif/selesai/gagal
+  - Jumlah klien baru (bulan ini)
+  - Status survey tertunda
+  - Nilai proyek berjalan
+  - Pipeline value total
+
+#### 3.7.2 Visual Charts
+- **ID**: FR-DASH-002
+- **Visualisasi**:
+  - Pie chart status proyek
+  - Bar chart monthly revenue
+  - Funnel chart pipeline
+  - Timeline proyek aktif
+
+---
+
+## 4. KEBUTUHAN NON-FUNGSIONAL
+
+### 4.1 Performa
+- **NFR-PERF-001**: Response time < 2 detik untuk load page
+- **NFR-PERF-002**: Support offline mode untuk survey form
+- **NFR-PERF-003**: Auto-sync saat online kembali
+
+### 4.2 Keamanan & Backup
+- **NFR-SEC-001**: Login aman dengan 2FA optional
+- **NFR-SEC-002**: Enkripsi file dan data penting
+- **NFR-SEC-003**: Backup otomatis mingguan
+- **NFR-SEC-004**: SSL certificate untuk HTTPS
+- **NFR-SEC-005**: Session management yang aman
+
+### 4.3 Mobile Responsiveness
+- **NFR-MOB-001**: Fully responsive design (Bootstrap/Tailwind)
+- **NFR-MOB-002**: Touch-friendly interface untuk surveyor
+- **NFR-MOB-003**: Optimized untuk bandwidth rendah
+- **NFR-MOB-004**: Progressive Web App (PWA) capability
+
+### 4.4 Usability
+- **NFR-USE-001**: Interface sederhana untuk surveyor
+- **NFR-USE-002**: Maximum 3 clicks untuk akses fitur utama
+- **NFR-USE-003**: Auto-save untuk form panjang
+- **NFR-USE-004**: Bulk operations support
+
+---
+
+## 5. ARSITEKTUR SISTEM
+
+### 5.1 Technology Stack
+- **Backend Framework**: Laravel 10.x
+- **PHP Version**: 8.2+
+- **Database**: MySQL 8.0+
+- **Frontend**: 
+  - Blade Template Engine
+  - Bootstrap 5 / Tailwind CSS
+  - Alpine.js / Vue.js untuk interaktif
+  - PWA untuk mobile access
+- **Additional Libraries**:
+  - Laravel Sanctum (API Authentication)
+  - Spatie Permission (Role Management)
+  - Laravel Excel (Export/Import)
+  - Intervention Image (Photo processing)
+  - Laravel Queue (Background jobs)
+  - Laravel Echo & Pusher (Real-time notification)
+
+### 5.2 API untuk Mobile Access
+- **RESTful API** endpoints untuk surveyor mobile
+- **JSON** response format
+- **Token-based** authentication
+- **Offline queue** mechanism
+
+### 5.3 Database Schema (Core Tables)
+```sql
+1. clients (klien)
+2. projects (proyek) 
+3. surveys (data survey)
+4. survey_checklists (template checklist)
+5. survey_checklist_items (items checklist)
+6. survey_responses (jawaban checklist)
+7. survey_photos (foto survey)
+8. pipeline_stages (tahapan pipeline)
+9. project_pipelines (tracking pipeline)
+10. documents (dokumen upload)
+11. notifications (notifikasi)
+12. users (pengguna)
+13. roles & permissions (Spatie tables)
+```
+
+### 5.4 Mobile Implementation Options
+1. **Option 1: Responsive Web (Recommended)**
+   - PWA dengan offline capability
+   - Service worker untuk caching
+   - IndexedDB untuk offline storage
+
+2. **Option 2: Hybrid Mobile**
+   - Laravel API Backend
+   - React Native/Flutter Frontend
+   - More complex, butuh resource lebih
+
+---
+
+## 6. IMPLEMENTATION PHASES
+
+### Phase 1 : Foundation
+- Setup Laravel project & database
+- Authentication & role management
+- Basic CRUD klien & proyek
+- Responsive layout
+
+### Phase 2 : Core Survey Features
+- Survey management module
+- Mobile-friendly survey form
+- Photo upload & GPS integration
+- Offline capability
+
+### Phase 3 : Pipeline & Documents
+- Pipeline visualization
+- Document management
+- Notification system
+- Dashboard development
+
+### Phase 4 : Polish & Deploy
+- Testing & bug fixes
+- Performance optimization
+- Security hardening
+- User training
+- Production deployment
+
+---
+
+## 7. SECURITY REQUIREMENTS
+
+### 7.1 Authentication
+- Strong password policy
+- Optional 2FA dengan Google Authenticator
+- Session timeout configuration
+- Login attempt limiting
+
+### 7.2 Data Protection
+- Database encryption untuk sensitive data
+- File upload virus scanning
+- SQL injection prevention (Laravel ORM)
+- XSS protection
+
+### 7.3 Backup Strategy
+- Daily database backup
+- Weekly full backup
+- Off-site backup storage
+- Restore procedure testing
+
+---
+
+## 8. TESTING REQUIREMENTS
+
+### 8.1 Unit Testing
+- Feature test untuk setiap module
+- Laravel PHPUnit implementation
+
+### 8.2 Mobile Testing
+- Test on various devices
+- Offline/online transition test
+- GPS accuracy test
+- Photo upload stress test
+
+### 8.3 User Acceptance Testing
+- Scenario test dengan surveyor real
+- Load testing untuk concurrent users
+- Security penetration testing
+
+---
+
+## 9. MAINTENANCE & SUPPORT
+
+### 9.1 Post-Launch Support
+- Bug fixing period 6 bulan
+- Monthly security patches
+- Performance monitoring
+- User feedback implementation
+
+### 9.2 Documentation
+- User manual per role
+- API documentation
+- System administration guide
+- Troubleshooting guide
+
+---
+
+## 10. PROJECT DELIVERABLES
+
+1. **Source Code** dengan dokumentasi
+2. **Database** schema dan migration files
+3. **User Manual** untuk setiap role
+4. **Admin Guide** untuk IT team
+5. **API Documentation** (jika ada mobile app)
+6. **Training Session** untuk users
+7. **Deployment Guide**
+
+---
+
+**Catatan**: Dokumen ini fokus pada kebutuhan spesifik Hansen Construction dengan emphasis pada mobile survey capability dan pipeline management. Implementasi dapat disesuaikan berdasarkan feedback user dan resource availability.

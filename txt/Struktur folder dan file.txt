@@ -1,0 +1,377 @@
+hansen-crm-kampus/
+        .editorconfig
+        .env
+        .env.example
+        .gitattributes
+        .gitignore
+        artisan
+        composer.json
+        composer.lock
+        package-lock.json
+        package.json
+        phpunit.xml
+        README.md
+        settings.json
+        vite.config.js
+        app/
+            ├───Events
+			│       NewSurveyAssigned.php
+			│
+			├───Helpers
+			│       SettingsHelper.php
+			│
+			├───Http
+			│   │   Kernel.php
+			│   │
+			│   ├───Controllers
+			│   │   │   AuthController.php
+			│   │   │   ClientController.php
+			│   │   │   Controller.php
+			│   │   │   DashboardController.php
+			│   │   │   DocumentController.php
+			│   │   │   NameController.php
+			│   │   │   NotificationController.php
+			│   │   │   PipelineController.php
+			│   │   │   ProfileController.php
+			│   │   │   ProjectController.php
+			│   │   │   ReportController.php
+			│   │   │   SettingController.php
+			│   │   │   SurveyController.php
+			│   │   │   TestController.php
+			│   │   │   UserController.php
+			│   │   │   UserControllerV2.php
+			│   │   │
+			│   │   └───Auth
+			│   │           AuthenticatedSessionController.php
+			│   │           ConfirmablePasswordController.php
+			│   │           EmailVerificationNotificationController.php
+			│   │           EmailVerificationPromptController.php
+			│   │           LoginController.php
+			│   │           NewPasswordController.php
+			│   │           PasswordController.php
+			│   │           PasswordResetLinkController.php
+			│   │           RegisteredUserController.php
+			│   │           VerifyEmailController.php
+			│   │
+			│   ├───Middleware
+			│   │       LogUserActivity.php
+			│   │
+			│   └───Requests
+			│           ProfileUpdateRequest.php
+			│           ProjectRequest.php
+			│
+			├───Models
+			│       Client.php
+			│       Document.php
+			│       ModelName.php
+			│       PipelineCoversion.php
+			│       PipelineStage.php
+			│       Project.php
+			│       ProjectPipeline.php
+			│       Setting.php
+			│       Survey.php
+			│       SurveyPhoto.php
+			│       User.php
+			│
+			├───Notifications
+			│       DocumentUploaded.php
+			│       NewClientAssigned.php
+			│       ProjectStatusChanged.php
+			│       SurveyAssigned.php
+			│
+			└───Providers
+					AppServiceProvider.php
+					AuthServiceProvider.php
+					BroadcastServiceProvider.php
+					EventServiceProvider.php
+					RouteServiceProvider.php
+					
+        bootstrap/
+            │   app.php
+			│   providers.php
+			│
+			└───cache
+					.gitignore
+					packages.php
+					services.php
+        config/
+			app.php
+			auth.php
+			backup.php
+			broadcasting.php
+			cache.php
+			database.php
+			filesystems.php
+			logging.php
+			mail.php
+			permission.php
+			queue.php
+			services.php
+			session.php
+			
+        database/
+        │   .gitignore
+		│
+		├───factories
+		│       UserFactory.php
+		│
+		├───migrations
+		│       0001_01_01_000000_create_users_table.php
+		│       0001_01_01_000001_create_cache_table.php
+		│       0001_01_01_000002_create_jobs_table.php
+		│       2025_06_21_142906_add_fields_to_users_table.php
+		│       2025_06_21_142950_create_clients_table.php
+		│       2025_06_21_143025_create_projects_table.php
+		│       2025_06_21_143043_create_surveys_table.php
+		│       2025_06_21_143120_create_survey_photos_table.php
+		│       2025_06_21_143141_create_pipeline_stages_table.php
+		│       2025_06_21_150906_create_permission_tables.php
+		│       2025_06_21_190248_create_model_names_table.php
+		│       2025_06_24_152843_create_project_pipelines_table.php
+		│       2025_06_24_153832_create_documents_table.php
+		│       2025_06_24_164359_add_project_id_to_documents_table.php
+		│       2025_06_25_155055_create_notifications_table.php
+		│       2025_06_28_131602_create_settings_table.php
+		│       2025_06_28_153133_add_fields_to_users_table.php
+		│
+		└───seeders
+				DatabaseSeeder.php
+				PipelineStageSeeder.php
+				RoleSeeder.php
+				SettingsSeeder.php
+				UserSeeder.php
+				
+        public/
+		│   .htaccess
+		│   favicon.ico
+		│   index.php
+		│   robots.txt
+		│
+		├───assets
+		│   └───img
+		│           hansen_construction_logo.jpeg
+		│
+		├───build
+		│   │   manifest.json
+		│   │
+		│   └───assets
+		│           app-C0tlCuLd.css
+		│           app-IZ_FdtlF.js
+		│
+		├───css
+		│       custom.css
+		│       mobile.css
+		│
+		├───images
+		│       construction-background.jpg
+		│       hansen_construction_logo.jpeg
+		│       Jasa Kontraktor Jakarta _ Desain Interior dan Furniture.mhtml
+		│       logo.png
+		│
+		└───storage
+			│   .gitignore
+			│
+			├───avatars
+			├───documents
+			│   ├───clients
+			│   └───projects
+			├───reports
+			├───settings
+			│       6P9iDvoubVC4B0gP2OUQMhLED5KtBVDQLHJ1FcYw.png
+			│
+			└───surveys
+				└───2
+						survey_2_1751118323_0.png
+						survey_2_1751118330_0.png
+			
+       resources/
+		├───css
+		│       app.css
+		│
+		├───js
+		│   │   app.js
+		│   │   bootstrap.js
+		│   │   pipeline.js
+		│   │
+		│   └───pages
+		│           pipeline.js
+		│
+		└───views
+			│   welcome.blade.php
+			│
+			├───auth
+			│       confirm-password.blade.php
+			│       forgot-password.blade.php
+			│       login.blade.php
+			│       register.blade.php
+			│       reset-password.blade.php
+			│       verify-email.blade.php
+			│
+			├───clients
+			│   │   create.blade.php
+			│   │   edit.blade.php
+			│   │   index.blade.php
+			│   │   show.blade.php
+			│   │
+			│   └───partials
+			├───components
+			│       application-logo.blade.php
+			│       auth-session-status.blade.php
+			│       breadcrumb.blade.php
+			│       danger-button.blade.php
+			│       dropdown-link.blade.php
+			│       dropdown.blade.php
+			│       input-error.blade.php
+			│       input-label.blade.php
+			│       modal.blade.php
+			│       nav-link.blade.php
+			│       navbar.blade.php
+			│       primary-button.blade.php
+			│       responsive-nav-link.blade.php
+			│       secondary-button.blade.php
+			│       sidebar.blade.php
+			│       text-input.blade.php
+			│
+			├───dashboard
+			│       admin.blade.php
+			│       manager.blade.php
+			│       marketing.blade.php
+			│       surveyor.blade.php
+			│
+			├───documents
+			│       create.blade.php
+			│       edit.blade.php
+			│       index.blade.php
+			│       show.blade.php
+			│
+			├───layouts
+			│       app.blade.php
+			│       auth.blade.php
+			│       guest.blade.php
+			│       mobile.blade.php
+			│       navigation.blade.php
+			│
+			├───notifications
+			│       index.blade.php
+			│       show.blade.php
+			│
+			├───pipeline
+			│       analytics.blade.php
+			│       funnel.blade.php
+			│       index.blade.php
+			│
+			├───profile
+			│   │   edit.blade.php
+			│   │
+			│   └───partials
+			│           delete-user-form.blade.php
+			│           update-password-form.blade.php
+			│           update-profile-information-form.blade.php
+			│
+			├───projects
+			│       create.blade.php
+			│       edit.blade.php
+			│       index.blade.php
+			│       show.blade.php
+			│       timeline.blade.php
+			│
+			├───reports
+			│   │   index.blade.php
+			│   │
+			│   └───types
+			│           client_acquisition.blade.php
+			│           client_acquisition_pdf.blade.php
+			│           project_summary.blade.php
+			│           project_summary_pdf.blade.php
+			│           revenue_forecast.blade.php
+			│           revenue_forecast_pdf.blade.php
+			│           sales_performance.blade.php
+			│           sales_performance_pdf.blade.php
+			│           survey_analysis.blade.php
+			│           survey_analysis_pdf.blade.php
+			│
+			├───settings
+			│       backup.blade.php
+			│       index.blade.php
+			│       log-viewer.blade.php
+			│       logs.blade.php
+			│       system.blade.php
+			│
+			├───surveys
+			│   │   create.blade.php
+			│   │   edit.blade.php
+			│   │   index.blade.php
+			│   │   show.blade.php
+			│   │
+			│   └───mobile
+			│           form.blade.php
+			│
+			└───users
+					create.blade.php
+					edit.blade.php
+					index.blade.php
+					profile.blade.php
+					show.blade.php
+
+        routes/
+			api.php
+			channels.php
+			console.php
+			web.php
+
+        storage/
+		├───app
+		│   │   .gitignore
+		│   │
+		│   ├───backup-temp
+		│   ├───backups
+		│   ├───private
+		│   │       .gitignore
+		│   │
+		│   ├───public
+		│   │   │   .gitignore
+		│   │   │
+		│   │   ├───avatars
+		│   │   ├───documents
+		│   │   │   ├───clients
+		│   │   │   └───projects
+		│   │   ├───reports
+		│   │   ├───settings
+		│   │   │       6P9iDvoubVC4B0gP2OUQMhLED5KtBVDQLHJ1FcYw.png
+		│   │   │
+		│   │   └───surveys
+		│   │       └───2
+		│   │               survey_2_1751118323_0.png
+		│   │               survey_2_1751118330_0.png
+		│   │
+		│   └───temp
+		├───framework
+		│   │   .gitignore
+		│   │
+		│   ├───cache
+		│   │   │   .gitignore
+		│   │   │
+		│   │   └───data
+		│   │           .gitignore
+		│   │
+		│   ├───sessions
+		│   │       .gitignore
+		│   │
+		│   ├───testing
+		│   │       .gitignore
+		│   │
+		│   └───views
+		│           .gitignore
+		│
+		└───logs
+				.gitignore
+				laravel.log
+				
+        tests/
+		│   TestCase.php
+		│
+		├───Feature
+		│       ExampleTest.php
+		│
+		└───Unit
+				ExampleTest.php
