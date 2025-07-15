@@ -2,375 +2,306 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\PipelineStage;
 use App\Models\ProjectPipeline;
-use App\Models\PipelineConversion;
+use App\Models\PipelineCoversion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PipelineController extends Controller
 {
-    /**
-     * Display the pipeline in kanban or list view
-     */
-    public function index(Request $request)
+    public function index()
     {
-        // Get all pipeline stages
-        $stages = PipelineStage::where('is_active', true)->orderBy('order')->get();
+        $stages = PipelineStage::orderBy('order')->get();
+        $projects = Project::with(['client', 'currentPipeline.stage'])->get();
 
-        // Get projects grouped by status
-        $projectsQuery = Project::with(['client', 'pic']);
+        // Group projects by stage
+        $projectsByStage = $projects->groupBy(function($project) {
+            return $project->currentPipeline->stage->name ?? 'Unknown';
+        });
 
-        // Filter by PIC for marketing role
-        if (Auth::user()->hasRole('marketing')) {
-            $projectsQuery->where('pic_id', Auth::id());
-        }
+        // Calculate metrics
+        $metrics = $this->calculateMetrics();
 
-        // Search filter
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $projectsQuery->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
-            });
-        }
+        return view('pipeline.index', compact('stages', 'projectsByStage', 'metrics'));
+    }
 
-        // Date range filter
-        if ($request->has('date_from') && !empty($request->date_from)) {
-            $projectsQuery->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->has('date_to') && !empty($request->date_to)) {
-            $projectsQuery->whereDate('created_at', '<=', $request->date_to);
-        }
+    public function funnel()
+    {
+        $stages = PipelineStage::orderBy('order')->get();
+        $funnelData = [];
 
-        $projects = $projectsQuery->get();
-
-        // Map project statuses to pipeline stage slugs
-        $statusMapping = [
-            'lead' => 'lead',
-            'survey' => 'survey',
-            'penawaran' => 'quotation',
-            'negosiasi' => 'negotiation',
-            'deal' => 'deal',
-            'eksekusi' => 'execution',
-            'selesai' => 'completed',
-            'batal' => 'cancelled'
-        ];
-
-        // Group projects by status
-        $pipeline = [];
         foreach ($stages as $stage) {
-            $stageSlug = $stage->slug;
+            $count = ProjectPipeline::where('stage_id', $stage->id)
+                ->where('is_current', true)
+                ->count();
 
-            // Find the matching project status for this stage
-            $matchingStatus = array_search($stageSlug, $statusMapping);
-            if ($matchingStatus === false) {
-                $matchingStatus = $stageSlug; // Fallback to using the slug directly
-            }
-
-            $stageProjects = $projects->filter(function($project) use ($matchingStatus, $statusMapping) {
-                // Check if the project's status matches this stage
-                return $project->status == $matchingStatus;
-            });
-
-            $pipeline[] = [
-                'stage' => $stage,
-                'projects' => $stageProjects,
-                'count' => $stageProjects->count(),
-                'value' => $stageProjects->sum('project_value')
+            $funnelData[] = [
+                'stage' => $stage->name,
+                'count' => $count,
+                'color' => $stage->color ?? '#3B82F6'
             ];
         }
 
-        // Calculate metrics
-        $metrics = [
-            'total_projects' => $projects->count(),
-            'total_value' => $projects->sum('project_value'),
-            'deal_value' => $projects->where('status', 'deal')->sum('deal_value') ?? $projects->where('status', 'deal')->sum('project_value'),
-            'conversion_rate' => $this->calculateConversionRate($projects),
-            'average_deal_size' => $projects->where('status', 'deal')->avg('deal_value') ?? $projects->where('status', 'deal')->avg('project_value') ?? 0,
-            'win_rate' => $this->calculateWinRate($projects)
-        ];
+        $metrics = $this->calculateMetrics();
 
-        // View type (kanban or list)
-        $viewType = $request->get('view', 'kanban');
+        return view('pipeline.funnel', compact('funnelData', 'metrics'));
+    }
 
-        return view('.pipeline.index', compact('pipeline', 'metrics', 'viewType'));
+    public function analytics()
+    {
+        $metrics = $this->calculateMetrics();
+        $conversionData = $this->getConversionData();
+        $timeAnalysis = $this->getTimeAnalysis();
+
+        return view('pipeline.analytics', compact('metrics', 'conversionData', 'timeAnalysis'));
     }
 
     /**
-     * Update project status in the pipeline
+     * Update project stage via drag & drop
      */
     public function updateStage(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'project_id' => 'required|exists:projects,id',
-            'new_status' => 'required|string'
+            'stage_id' => 'required|exists:pipeline_stages,id'
         ]);
 
-        $project = Project::findOrFail($validated['project_id']);
+        $project = Project::findOrFail($request->project_id);
+        $newStage = PipelineStage::findOrFail($request->stage_id);
 
-        // Check authorization
-        if (Auth::user()->hasRole('marketing') && $project->pic_id != Auth::id()) {
-            return response()->json(['error' => 'Unauthorized. You can only update your own projects.'], 403);
+        // Get current pipeline
+        $currentPipeline = $project->currentPipeline;
+
+        if ($currentPipeline && $currentPipeline->stage_id == $request->stage_id) {
+            return response()->json(['message' => 'Project already in this stage'], 400);
         }
 
-        // Map stage slug back to project status if needed
-        $statusMapping = [
-            'lead' => 'lead',
-            'survey' => 'survey',
-            'quotation' => 'penawaran',
-            'negotiation' => 'negosiasi',
-            'deal' => 'deal',
-            'execution' => 'eksekusi',
-            'completed' => 'selesai',
-            'cancelled' => 'batal'
-        ];
-
-        $newStatus = $validated['new_status'];
-        if (array_key_exists($newStatus, $statusMapping)) {
-            $newStatus = $statusMapping[$newStatus];
-        }
-
-        DB::beginTransaction();
-        try {
-            $oldStatus = $project->status;
-
-            // Don't update if status is the same
-            if ($oldStatus === $newStatus) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'No change in status'
-                ]);
+        DB::transaction(function() use ($project, $newStage, $currentPipeline) {
+            // Set current pipeline as not current
+            if ($currentPipeline) {
+                $currentPipeline->update(['is_current' => false]);
             }
 
-            // Update project status
-            $project->update(['status' => $newStatus]);
-
-            // Log pipeline history
+            // Create new pipeline entry
             ProjectPipeline::create([
                 'project_id' => $project->id,
-                'from_status' => $oldStatus,
-                'to_status' => $newStatus,
-                'changed_by' => Auth::id(),
-                'changed_at' => now(),
-                'notes' => $request->notes ?? 'Status updated via pipeline drag and drop'
+                'stage_id' => $newStage->id,
+                'is_current' => true,
+                'moved_at' => now(),
+                'moved_by' => auth()->id()
             ]);
 
-            // Special handling for deal status
-            if ($newStatus == 'deal' && !$project->deal_value) {
-                $project->update(['deal_value' => $project->project_value]);
-            }
+            // Update project status
+            $project->update(['status' => $newStage->name]);
+        });
 
-            // Track conversion for analytics
-            $this->trackStageConversion($oldStatus, $newStatus);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Status project berhasil diupdate'
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'error' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Display the sales funnel visualization
-     */
-    public function funnel(Request $request)
-    {
-        $stages = PipelineStage::where('is_active', true)->orderBy('order')->get();
-
-        // Get date range (default last 30 days)
-        $dateFrom = $request->get('date_from', now()->subDays(30)->format('Y-m-d'));
-        $dateTo = $request->get('date_to', now()->format('Y-m-d'));
-
-        // Build funnel data
-        $funnelData = [];
-        $previousCount = null;
-
-        foreach ($stages as $index => $stage) {
-            $statusMapping = [
-                'lead' => 'lead',
-                'survey' => 'survey',
-                'quotation' => 'penawaran',
-                'negotiation' => 'negosiasi',
-                'deal' => 'deal',
-                'execution' => 'eksekusi',
-                'completed' => 'selesai',
-                'cancelled' => 'batal'
-            ];
-
-            $projectStatus = array_search($stage->slug, $statusMapping) !== false ?
-                array_search($stage->slug, $statusMapping) : $stage->slug;
-
-            $count = Project::whereDate('created_at', '>=', $dateFrom)
-                           ->whereDate('created_at', '<=', $dateTo)
-                           ->where('status', $projectStatus)
-                           ->count();
-
-            $conversionRate = ($index > 0 && $previousCount > 0)
-                ? round(($count / $previousCount) * 100, 1)
-                : 100;
-
-            $funnelData[] = [
-                'stage' => $stage,
-                'count' => $count,
-                'conversion_rate' => $conversionRate,
-                'color' => $stage->color
-            ];
-
-            $previousCount = $count;
-        }
-
-        return view('.pipeline.funnel', compact('funnelData', 'dateFrom', 'dateTo'));
-    }
-
-    /**
-     * Display the pipeline analytics
-     */
-    public function analytics(Request $request)
-    {
-        // Pipeline velocity (average time in each stage)
-        $velocityData = DB::table('project_pipelines')
-            ->select(
-                'from_status',
-                DB::raw('AVG(TIMESTAMPDIFF(DAY, created_at, changed_at)) as avg_days')
-            )
-            ->whereNotNull('from_status')
-            ->groupBy('from_status')
-            ->get();
-
-        // Win/Loss analysis
-        $winLossData = [
-            'won' => Project::where('status', 'deal')->orWhere('status', 'eksekusi')->orWhere('status', 'selesai')->count(),
-            'lost' => Project::where('status', 'batal')->count(),
-            'in_progress' => Project::whereNotIn('status', ['deal', 'eksekusi', 'selesai', 'batal'])->count()
-        ];
-
-        // Monthly pipeline value trend
-        $monthlyTrend = Project::selectRaw('
-                MONTH(created_at) as month,
-                YEAR(created_at) as year,
-                SUM(project_value) as total_value,
-                COUNT(*) as total_projects
-            ')
-            ->whereYear('created_at', now()->year)
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
-
-        // Top performers (by PIC)
-        $topPerformers = Project::select('pic_id', DB::raw('COUNT(*) as total_projects'), DB::raw('SUM(COALESCE(deal_value, project_value)) as total_value'))
-            ->whereIn('status', ['deal', 'eksekusi', 'selesai'])
-            ->groupBy('pic_id')
-            ->with('pic')
-            ->orderByDesc('total_value')
-            ->limit(5)
-            ->get();
-
-        return view('.pipeline.analytics', compact('velocityData', 'winLossData', 'monthlyTrend', 'topPerformers'));
-    }
-
-    /**
-     * Calculate the lead-to-deal conversion rate
-     */
-    private function calculateConversionRate($projects)
-    {
-        $totalLeads = $projects->count();
-        $totalDeals = $projects->whereIn('status', ['deal', 'eksekusi', 'selesai'])->count();
-
-        return $totalLeads > 0 ? round(($totalDeals / $totalLeads) * 100, 1) : 0;
-    }
-
-    private function calculateWinRate($projects)
-    {
-        $totalWon = $projects->whereIn('status', ['deal', 'eksekusi', 'selesai'])->count();  // Ganti dengan status yang sesuai
-        $totalProjects = $projects->count();
-
-        return $totalProjects > 0 ? round(($totalWon / $totalProjects) * 100, 1) : 0;
-    }
-
-
-    /**
-     * Get pipeline metrics via AJAX for real-time updates
-     */
-    public function getMetrics(Request $request)
-    {
-        // Get projects based on filters
-        $projectsQuery = Project::query();
-
-        // Filter by PIC for marketing role
-        if (Auth::user()->hasRole('marketing')) {
-            $projectsQuery->where('pic_id', Auth::id());
-        }
-
-        // Search filter
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $projectsQuery->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        // Date range filter
-        if ($request->has('date_from') && !empty($request->date_from)) {
-            $projectsQuery->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->has('date_to') && !empty($request->date_to)) {
-            $projectsQuery->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        $projects = $projectsQuery->get();
-
-        // Calculate metrics
-        $metrics = [
-            'total_projects' => $projects->count(),
-            'total_value' => $projects->sum('project_value'),
-            'deal_value' => $projects->where('status', 'deal')->sum('deal_value') ?? $projects->where('status', 'deal')->sum('project_value'),
-            'conversion_rate' => $this->calculateConversionRate($projects),
-            'average_deal_size' => $projects->where('status', 'deal')->avg('deal_value') ?? $projects->where('status', 'deal')->avg('project_value') ?? 0,
-            'win_rate' => $this->calculateWinRate($projects)
-        ];
+        // Update conversion tracking
+        $this->updateConversionTracking($project->id, $newStage->id);
 
         return response()->json([
-            'success' => true,
-            'metrics' => $metrics
+            'message' => 'Project stage updated successfully',
+            'project' => $project->load('currentPipeline.stage')
         ]);
     }
 
     /**
-     * Track stage conversion for analytics
+     * Calculate pipeline metrics
      */
-    private function trackStageConversion($fromStatus, $toStatus)
+    private function calculateMetrics()
     {
-        try {
-            $conversionRecord = PipelineConversion::firstOrNew([
-                'from_status' => $fromStatus,
-                'to_status' => $toStatus
-            ]);
+        $totalProjects = Project::count();
+        $totalValue = Project::sum('project_value') ?? 0;
 
-            $conversionRecord->count = ($conversionRecord->count ?? 0) + 1;
-            $conversionRecord->save();
-        } catch (\Exception $e) {
-            // Log error but don't stop the process
-            \Log::error('Failed to track conversion: ' . $e->getMessage());
+        // Get projects in each key stage
+        $leadStage = PipelineStage::where('name', 'Lead Masuk')->first();
+        $surveyStage = PipelineStage::where('name', 'Survey Dilakukan')->first();
+        $quotationStage = PipelineStage::where('name', 'Penawaran Dibuat')->first();
+        $dealStage = PipelineStage::where('name', 'Deal/Kontrak')->first();
+
+        // Count projects in each stage
+        $leadsCount = $this->getProjectsInStage($leadStage?->id);
+        $surveysCount = $this->getProjectsInStage($surveyStage?->id);
+        $quotationsCount = $this->getProjectsInStage($quotationStage?->id);
+        $dealsCount = $this->getProjectsInStage($dealStage?->id);
+
+        // Calculate conversions
+        $leadToSurvey = $leadsCount > 0 ? round(($surveysCount / $leadsCount) * 100, 1) : 0;
+        $surveyToQuotation = $surveysCount > 0 ? round(($quotationsCount / $surveysCount) * 100, 1) : 0;
+        $quotationToDeal = $quotationsCount > 0 ? round(($dealsCount / $quotationsCount) * 100, 1) : 0;
+
+        // Calculate average time per stage
+        $avgTimePerStage = $this->calculateAverageTimePerStage();
+
+        return [
+            'total_projects' => $totalProjects,
+            'total_value' => $totalValue,
+            'lead_to_survey' => $leadToSurvey,
+            'survey_to_quotation' => $surveyToQuotation,
+            'quotation_to_deal' => $quotationToDeal,
+            'average_time_per_stage' => $avgTimePerStage
+        ];
+    }
+
+    /**
+     * Get projects count in specific stage
+     */
+    private function getProjectsInStage($stageId)
+    {
+        if (!$stageId) return 0;
+
+        return ProjectPipeline::where('stage_id', $stageId)
+            ->where('is_current', true)
+            ->count();
+    }
+
+    /**
+     * Calculate average time per stage
+     */
+    private function calculateAverageTimePerStage()
+    {
+        $avgTimes = ProjectPipeline::select('stage_id')
+            ->selectRaw('AVG(TIMESTAMPDIFF(DAY, moved_at, COALESCE(
+                (SELECT moved_at FROM project_pipelines p2
+                 WHERE p2.project_id = project_pipelines.project_id
+                 AND p2.moved_at > project_pipelines.moved_at
+                 ORDER BY p2.moved_at LIMIT 1),
+                NOW()
+            ))) as avg_days')
+            ->where('is_current', false)
+            ->groupBy('stage_id')
+            ->get();
+
+        $totalDays = 0;
+        $stageCount = 0;
+
+        foreach ($avgTimes as $time) {
+            $totalDays += $time->avg_days;
+            $stageCount++;
         }
+
+        return $stageCount > 0 ? round($totalDays / $stageCount) : 0;
+    }
+
+    /**
+     * Get conversion data for analytics
+     */
+    private function getConversionData()
+    {
+        $stages = PipelineStage::orderBy('order')->get();
+        $conversionData = [];
+
+        foreach ($stages as $index => $stage) {
+            $currentCount = $this->getProjectsInStage($stage->id);
+            $totalPassed = ProjectPipeline::where('stage_id', $stage->id)->count();
+
+            $conversionData[] = [
+                'stage' => $stage->name,
+                'current' => $currentCount,
+                'total_passed' => $totalPassed,
+                'color' => $stage->color ?? '#3B82F6'
+            ];
+        }
+
+        return $conversionData;
+    }
+
+    /**
+     * Get time analysis data
+     */
+    private function getTimeAnalysis()
+    {
+        $stages = PipelineStage::orderBy('order')->get();
+        $timeData = [];
+
+        foreach ($stages as $stage) {
+            $avgTime = ProjectPipeline::where('stage_id', $stage->id)
+                ->selectRaw('AVG(TIMESTAMPDIFF(DAY, moved_at, COALESCE(
+                    (SELECT moved_at FROM project_pipelines p2
+                     WHERE p2.project_id = project_pipelines.project_id
+                     AND p2.moved_at > project_pipelines.moved_at
+                     ORDER BY p2.moved_at LIMIT 1),
+                    NOW()
+                ))) as avg_days')
+                ->where('is_current', false)
+                ->first();
+
+            $timeData[] = [
+                'stage' => $stage->name,
+                'avg_days' => round($avgTime->avg_days ?? 0, 1),
+                'color' => $stage->color ?? '#3B82F6'
+            ];
+        }
+
+        return $timeData;
+    }
+
+    /**
+     * Update conversion tracking
+     */
+    private function updateConversionTracking($projectId, $stageId)
+    {
+        $project = Project::find($projectId);
+        $stage = PipelineStage::find($stageId);
+
+        if (!$project || !$stage) return;
+
+        // Create or update conversion record
+        PipelineCoversion::updateOrCreate([
+            'project_id' => $projectId,
+            'stage_id' => $stageId
+        ], [
+            'converted_at' => now(),
+            'project_value' => $project->project_value,
+            'converted_by' => auth()->id()
+        ]);
+    }
+
+    /**
+     * Get pipeline summary for dashboard
+     */
+    public function getPipelineSummary()
+    {
+        $stages = PipelineStage::orderBy('order')->get();
+        $summary = [];
+
+        foreach ($stages as $stage) {
+            $projects = ProjectPipeline::where('stage_id', $stage->id)
+                ->where('is_current', true)
+                ->with('project')
+                ->get();
+
+            $stageValue = $projects->sum('project.project_value') ?? 0;
+
+            $summary[] = [
+                'stage' => $stage->name,
+                'count' => $projects->count(),
+                'value' => $stageValue,
+                'color' => $stage->color ?? '#3B82F6'
+            ];
+        }
+
+        return response()->json($summary);
+    }
+
+    /**
+     * Get project details for quick view
+     */
+    public function getProjectDetails($id)
+    {
+        $project = Project::with([
+            'client',
+            'currentPipeline.stage',
+            'surveys' => function($query) {
+                $query->latest()->take(3);
+            },
+            'documents' => function($query) {
+                $query->latest()->take(3);
+            }
+        ])->findOrFail($id);
+
+        return response()->json($project);
     }
 }
